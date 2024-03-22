@@ -1,9 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:gap/gap.dart';
 import 'package:intl/intl.dart';
+import 'package:taskati/core/functions/routing.dart';
+import 'package:taskati/core/services/local_storage.dart';
 import 'package:taskati/core/utils/colors.dart';
 import 'package:taskati/core/utils/text_style.dart';
 import 'package:taskati/core/widgets/custom_elev_button.dart';
+import 'package:taskati/features/addtask/data/task_model.dart';
+import 'package:taskati/features/home/presentation/view/home_view.dart';
 
 class AddTask extends StatefulWidget {
   const AddTask({super.key});
@@ -13,6 +17,9 @@ class AddTask extends StatefulWidget {
 }
 
 class _AddTaskState extends State<AddTask> {
+  var titleController = TextEditingController();
+  var noteController = TextEditingController();
+
   String date = DateFormat("dd/MM/yyy").format(DateTime.now());
   String startTime = DateFormat('hh: mm a').format(DateTime.now());
   String endTime = DateFormat("hh:mm a")
@@ -21,6 +28,7 @@ class _AddTaskState extends State<AddTask> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      resizeToAvoidBottomInset: false,
       appBar: AppBar(
         backgroundColor: AppColors.white,
         title: Text(
@@ -48,6 +56,7 @@ class _AddTaskState extends State<AddTask> {
             ),
             const Gap(5),
             TextFormField(
+              controller: titleController,
               decoration: const InputDecoration(
                 hintText: 'Enter title here',
               ),
@@ -58,6 +67,7 @@ class _AddTaskState extends State<AddTask> {
             ),
             const Gap(5),
             TextFormField(
+                controller: noteController,
                 maxLines: 4,
                 decoration: const InputDecoration(
                   hintText: 'Enter note here',
@@ -119,7 +129,9 @@ class _AddTaskState extends State<AddTask> {
                                   initialTime: TimeOfDay.now())
                               .then((value) {
                             if (value != null) {
-                              startTime = value.format(context);
+                              setState(() {
+                                startTime = value.format(context);
+                              });
                             }
                           });
                         },
@@ -137,7 +149,9 @@ class _AddTaskState extends State<AddTask> {
                                   initialTime: TimeOfDay.now())
                               .then((value) {
                             if (value != null) {
-                              endTime = value.format(context);
+                              setState(() {
+                                endTime = value.format(context);
+                              });
                             }
                           });
                         },
@@ -171,12 +185,14 @@ class _AddTaskState extends State<AddTask> {
                                             });
                                           },
                                           child: CircleAvatar(
+                                              child: index == color
+                                                ? const Icon(
+                                                    Icons.check,
+                                                    color: AppColors.white,
+                                                  )
+                                                : const SizedBox(),
                                             radius: 15,
-                                            child: index == color ? 
-                                            const Icon(
-                                              Icons.check,
-                                              color: AppColors.white,
-                                            ): const SizedBox(),
+                                          
                                             backgroundColor: index == 0
                                                 ? AppColors.primaryColor
                                                 : index == 1
@@ -190,7 +206,22 @@ class _AddTaskState extends State<AddTask> {
                         ]),
                     const Spacer(),
                     custom_elev_button(
-                      onPressed: () {},
+                      onPressed: () {
+                        String id = DateTime.now().toString();
+
+                        AppLocalStorage.cashtaskbox(
+                            id,
+                            TaskModel(
+                                id: id,
+                                title: titleController.text,
+                                note: noteController.text,
+                                date: date,
+                                startTime: startTime,
+                                endTime: endTime,
+                                color: color,
+                                isComplete: false));
+                        pushWithReplacement(context, const HomeView());
+                      },
                       text: 'Create Task',
                       width: 120,
                       height: 50,
